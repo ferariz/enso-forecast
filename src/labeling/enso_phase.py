@@ -1,100 +1,105 @@
 """ENSO phase labeling following the ONI convention.
 
-The Oceanic Niño Index (ONI) uses a 3-month running mean of the Niño 3.4
-SST anomaly, with thresholds ±0.5 °C sustained for ≥5 consecutive months.
-
-For predictive ML purposes we use the same rolling-mean smoothing but apply
-the threshold without the "sustained" requirement — appropriate for a monthly
-classification target.
+The Oceanic Niño Index (ONI) uses a 3-month backward rolling mean of the
+Niño 3.4 SST anomaly with thresholds ±0.5 °C.
 
 Labels
 ------
-    "El Niño"  : rolling_mean(nino34_anom) > +0.5
-    "La Niña"  : rolling_mean(nino34_anom) < -0.5
+    "El Niño"  : rolling_mean(nino34_anom, 3) >  +0.5
+    "La Niña"  : rolling_mean(nino34_anom, 3) <  -0.5
     "Neutral"  : otherwise
 
-Targets generated
------------------
-    enso_phase  : label at current time t (reference)
-    enso_t1     : label at t + 1 month
-    enso_t3     : label at t + 3 months
-    enso_t6     : label at t + 6 months
+Targets
+-------
+    enso_phase  : phase at current time t (reference, not a prediction target)
+    enso_t1     : phase at t + 1 month
+    enso_t3     : phase at t + 3 months
+    enso_t6     : phase at t + 6 months
 
-CRITICAL: shift() is applied to the smoothed series BEFORE assigning to
-features, so the target at horizon L is the label that will be KNOWN at
-t + L — not information from the future leaking into t.
+SHIFT LOGIC (critical):
+    future_smoothed = smoothed.shift(-L)
+    enso_tL = _phase_from_value(future_smoothed)
+
+    shift(-L) pulls the value L steps ahead into the current row.
+    This means enso_t1 at row i equals enso_phase at row i+1.
+    The last L rows will be NaN — expected and correct.
 """
 from __future__ import annotations
 
 import pandas as pd
 
-from src.utils.logging import get_logger
+# ONI thresholds (°C)
+EL_NINO_THRESH =  0.5
+LA_NINA_THRESH = -0.5
 
-logger = get_logger(__name__)
+# Rolling window for smoothing (months)
+SMOOTH_WINDOW = 3
 
-PHASE_MAP = {
-    "El Niño": 2,
-    "Neutral":  1,
-    "La Niña":  0,
-}
+# Default prediction horizons (months)
+DEFAULT_HORIZONS = [1, 3, 6]
 
-EL_NINO_THRESH =  0.5   # °C
-LA_NINA_THRESH = -0.5   # °C
-ROLLING_WINDOW = 3      # months
+
+def _smooth(series: pd.Series) -> pd.Series:
+    """Apply 3-month backward rolling mean (min 2 periods to avoid all-NaN start)."""
+    return series.rolling(window=SMOOTH_WINDOW, min_periods=2).mean()
 
 
 def _phase_from_value(series: pd.Series) -> pd.Series:
-    """Vectorised mapping from anomaly value to phase string."""
+    """Map a continuous anomaly series to ENSO phase strings."""
     phase = pd.Series("Neutral", index=series.index, dtype=object)
     phase[series >  EL_NINO_THRESH] = "El Niño"
     phase[series <  LA_NINA_THRESH] = "La Niña"
+    # Propagate NaN — if the smoothed value was NaN, phase should be NaN too
+    phase = phase.where(series.notna(), other=None)
     return phase
 
 
 def label(
     df: pd.DataFrame,
     source_col: str = "nino34_anom",
-    horizons: list[int] | None = None,
+    horizons: list[int] = DEFAULT_HORIZONS,
 ) -> pd.DataFrame:
-    """Add ENSO phase label columns to *df*.
+    """Add ENSO phase columns to df.
 
     Parameters
     ----------
-    df:
-        DataFrame with a monthly DatetimeIndex.
-    source_col:
-        Column used for thresholding. Default ``nino34_anom``.
-    horizons:
-        Lead-time months to generate targets for. Default [1, 3, 6].
+    df : pd.DataFrame
+        Cleaned DataFrame with a monthly DatetimeIndex.
+    source_col : str
+        Column to threshold. Default "nino34_anom".
+    horizons : list[int]
+        Lead times in months to generate targets for.
 
     Returns
     -------
     pd.DataFrame
-        Original df plus ``enso_phase`` and ``enso_tL`` target columns.
+        Original df plus enso_phase and enso_tL columns.
     """
-    if horizons is None:
-        horizons = [1, 3, 6]
+    if source_col not in df.columns:
+        raise ValueError(
+            f"Source column '{source_col}' not found. "
+            f"Available columns: {list(df.columns)}"
+        )
 
     df = df.copy()
 
-    # 3-month centred rolling mean of the anomaly
-    smoothed = df[source_col].rolling(window=ROLLING_WINDOW, center=False, min_periods=2).mean()
+    # Smooth the anomaly series (backward-looking — no leakage)
+    smoothed = _smooth(df[source_col])
 
-    # Current phase (reference label, NOT a target to predict from t)
+    # Current phase (reference label at time t)
     df["enso_phase"] = _phase_from_value(smoothed)
 
-    # Future targets — shift smoothed series backward by L months
-    # shift(-L) pulls the future value into the current row.
-    # This creates the TARGET: what phase will be observed at t+L.
+    # Future targets — one per horizon
     for L in horizons:
         col = f"enso_t{L}"
         future_smoothed = smoothed.shift(-L)
         df[col] = _phase_from_value(future_smoothed)
-        n_nan = df[col].isna().sum()
-        if n_nan:
-            logger.debug(f"Target {col}: {n_nan} NaN rows at end (expected due to shift)")
 
-    n_phases = df["enso_phase"].value_counts().to_dict()
-    logger.info(f"ENSO phase distribution: {n_phases}")
+    # Report
+    dist = df["enso_phase"].value_counts().to_dict()
+    print(f"[labeling] Phase distribution at t: {dist}")
+    for L in horizons:
+        n_nan = df[f"enso_t{L}"].isna().sum()
+        print(f"[labeling] enso_t{L}: {n_nan} NaN rows at end (expected: {L})")
 
     return df

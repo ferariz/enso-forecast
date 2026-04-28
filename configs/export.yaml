@@ -1,0 +1,39 @@
+# ── Kaggle Export Configuration ──────────────────────────────────────────────
+
+output_dir: data/kaggle_export
+
+files:
+  train: enso_train.parquet
+  test:  enso_test.parquet
+  data_dictionary: data_dictionary.csv
+  metadata: metadata.json
+
+# Test set definition for Kaggle split
+test_start: "2019-01"
+
+# Which targets to include in the export
+targets:
+  - enso_t1
+  - enso_t3
+  - enso_t6
+
+# Label encoding for export
+label_map:
+  "El Niño": 2
+  "Neutral":  1
+  "La Niña":  0
+
+# Also export a human-readable string column alongside the int label
+include_label_strings: true
+
+# Column rename map: internal_name → export_name
+# Keeps exported columns intuitive for Kaggle users
+column_renames:
+  nino34_anom: sst_anom_nino34
+  nino12_anom: sst_anom_nino12
+  nino3_anom:  sst_anom_nino3
+  nino4_anom:  sst_anom_nino4
+  soi:         southern_oscillation_index
+  zwnd850_anom: zonal_wind_850_anom
+
+format: parquet    # options: parquet | csv

@@ -1,0 +1,43 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+*.egg
+
+# Data (large files — track with DVC or similar)
+data/raw/*
+data/interim/*
+data/processed/*
+data/kaggle_export/*
+!data/**/.gitkeep
+
+# Model artifacts
+outputs/models/*
+!outputs/models/.gitkeep
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# Testing & coverage
+.pytest_cache/
+htmlcov/
+.coverage
+*.coverage
+
+# Linting / build tools
+.ruff_cache/
+.mypy_cache/
+
+# Environment
+.env
+*.env.local
+
+# IDE
+.vscode/
+.idea/
+*.sublime-project

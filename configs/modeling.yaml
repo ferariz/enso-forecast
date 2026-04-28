@@ -1,0 +1,57 @@
+# ── Modeling Configuration ───────────────────────────────────────────────────
+
+targets:
+  - enso_t1    # ENSO phase 1 month ahead
+  - enso_t3    # 3 months ahead
+  - enso_t6    # 6 months ahead
+
+validation:
+  strategy: time_split          # options: time_split | walk_forward
+  train_end: "2015-12"          # last month included in training
+  val_start:  "2016-01"
+  val_end:    "2018-12"
+  test_start: "2019-01"         # held-out test set (never touch during model selection)
+  # walk_forward params (used when strategy = walk_forward)
+  initial_train_years: 15
+  step_months: 12
+  horizon_months: 12
+
+models:
+  logistic_regression:
+    enabled: true
+    params:
+      C: 1.0
+      max_iter: 1000
+      class_weight: balanced
+      random_state: 42
+
+  random_forest:
+    enabled: true
+    params:
+      n_estimators: 300
+      max_depth: 6
+      min_samples_leaf: 10
+      class_weight: balanced
+      random_state: 42
+      n_jobs: -1
+
+  lightgbm:
+    enabled: true
+    params:
+      n_estimators: 500
+      learning_rate: 0.05
+      num_leaves: 31
+      min_child_samples: 20
+      class_weight: balanced
+      random_state: 42
+      n_jobs: -1
+      verbosity: -1
+
+baselines:
+  climatology: true        # predict most frequent class in training set
+  persistence: true        # predict ENSO_t for all horizons
+
+shap:
+  enabled: true
+  model: lightgbm          # which trained model to explain
+  max_display: 20

@@ -1,0 +1,45 @@
+# ── Data Sources Configuration ──────────────────────────────────────────────
+# Each source defines how raw data is fetched and where it lands.
+
+nino_indices:
+  provider: noaa_cpc
+  url: "https://www.cpc.ncep.noaa.gov/data/indices/ersst5.nino.mth.91-20.ascii"
+  # Columns: YR MON NINO1+2 ANOM NINO3 ANOM NINO4 ANOM NINO3.4 ANOM
+  filename: nino_indices_raw.txt
+  variables:
+    - name: nino12
+      col: "NINO1+2"
+      anomaly_col: "ANOM_12"
+    - name: nino3
+      col: "NINO3"
+      anomaly_col: "ANOM_3"
+    - name: nino34
+      col: "NINO3.4"
+      anomaly_col: "ANOM_34"
+    - name: nino4
+      col: "NINO4"
+      anomaly_col: "ANOM_4"
+
+soi:
+  provider: noaa_cpc
+  url: "https://www.cpc.ncep.noaa.gov/data/indices/soi"
+  filename: soi_raw.txt
+
+# Zonal wind at 850 hPa along equatorial band (~5S–5N)
+zonal_wind_850:
+  provider: noaa_cpc
+  url: "https://www.cpc.ncep.noaa.gov/data/indices/zwnd200"
+  filename: zwnd850_raw.txt
+  note: "Monthly mean 850 hPa zonal wind anomaly, equatorial Pacific"
+
+mjo:
+  enabled: false   # toggle to include MJO features
+  provider: bom_australia
+  url: "http://www.bom.gov.au/climate/mjo/graphics/rmm.74toRealtime.txt"
+  filename: mjo_raw.txt
+  # Phase 1–8 encoded as sin/cos pair; amplitude as-is
+
+# Time range applied uniformly at preprocessing stage
+time_range:
+  start: "1980-01"
+  end: null   # null = use latest available

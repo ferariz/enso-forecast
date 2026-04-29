@@ -50,11 +50,23 @@ def _is_valid_year_line(line: str) -> bool:
 
 
 def parse(text: str) -> pd.DataFrame:
-    """Parse wide-format SOI into a tidy monthly series."""
-    data_lines = [
-        line for line in text.splitlines()
-        if _is_valid_year_line(line)
-    ]
+    """Parse wide-format SOI into a tidy monthly series.
+
+    The real NOAA SOI file contains two tables separated by a blank line
+    and a second header — STANDARDIZED DATA followed by NORMALIZED DATA.
+    We want only the first (standardized) table.
+    """
+    # Take only lines up to the second occurrence of a header-like line
+    # (a line whose first token is NOT a valid year AND appears after data)
+    data_lines = []
+    seen_data = False
+    for line in text.splitlines():
+        if _is_valid_year_line(line):
+            data_lines.append(line)
+            seen_data = True
+        elif seen_data and line.strip() and not line.strip()[0].isdigit():
+            # We've seen data rows and hit a non-data line — second table header
+            break
 
     df = pd.read_csv(
         io.StringIO("\n".join(data_lines)),

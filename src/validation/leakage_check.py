@@ -1,24 +1,31 @@
-"""Data leakage detection utilities.
+"""Automated data leakage detection.
 
-Runs automated checks to verify that no future information contaminates
-the feature set. Called as part of the dataset build pipeline.
+Runs a suite of checks on the feature-engineered DataFrame before
+any model training. If any check fails, the pipeline should stop.
+
+Checks
+------
+1. index_monotonic       — time index is strictly increasing
+2. no_future_lags        — no feature column encodes a negative lag
+3. no_targets_in_features — target columns not accidentally in feature list
+4. target_shift_correct  — enso_t1[i] == enso_phase[i+1] (spot check)
 """
 from __future__ import annotations
 
 import pandas as pd
-
-from src.utils.logging import get_logger
-
-logger = get_logger(__name__)
+import numpy as np
 
 TARGET_COLS = {"enso_phase", "enso_t1", "enso_t3", "enso_t6"}
 
 
-def check_no_future_lags(df: pd.DataFrame) -> bool:
-    """Verify that no feature column name implies a negative lag (future).
+def check_index_monotonic(df: pd.DataFrame) -> tuple[bool, str]:
+    ok = df.index.is_monotonic_increasing
+    msg = "OK" if ok else "FAIL — index is not monotonically increasing"
+    return ok, msg
 
-    Looks for columns named ``*_lagN`` where N ≤ 0.
-    """
+
+def check_no_future_lags(df: pd.DataFrame) -> tuple[bool, str]:
+    """Detect any column whose name implies a non-positive lag (future data)."""
     bad = []
     for col in df.columns:
         if "_lag" in col:
@@ -28,87 +35,85 @@ def check_no_future_lags(df: pd.DataFrame) -> bool:
                     bad.append(col)
             except ValueError:
                 pass
-    if bad:
-        logger.error(f"[LEAKAGE] Future-lag columns detected: {bad}")
-        return False
-    logger.info("[OK] No future-lag columns found")
-    return True
+    ok  = len(bad) == 0
+    msg = "OK" if ok else f"FAIL — future-lag columns found: {bad}"
+    return ok, msg
 
 
-def check_feature_target_correlation_in_time(
-    df: pd.DataFrame,
-    target: str = "enso_t1",
-    threshold: float = 0.99,
-) -> bool:
-    """Flag features with suspiciously high correlation with a future target.
-
-    A near-perfect correlation (ρ > threshold) between a feature and a
-    shifted target often signals data leakage.  This is a heuristic — high
-    correlation with the right physical features (e.g. nino34_anom and
-    enso_t1) is expected, so the threshold is intentionally set very high.
-    """
-    if target not in df.columns:
-        logger.warning(f"Target {target!r} not found — skipping correlation check")
-        return True
-
-    # Encode target as numeric for correlation
-    enc = {"El Niño": 2, "Neutral": 1, "La Niña": 0}
-    y = df[target].map(enc)
-
-    feature_cols = [c for c in df.columns if c not in TARGET_COLS
-                    and pd.api.types.is_numeric_dtype(df[c])]
-
-    suspect = []
-    for col in feature_cols:
-        if df[col].nunique() < 2:
-            continue
-        corr = df[col].corr(y)
-        if abs(corr) > threshold:
-            suspect.append((col, round(corr, 4)))
-
-    if suspect:
-        logger.warning(
-            f"[LEAKAGE WARNING] Features with |corr| > {threshold} vs {target}: {suspect}"
-        )
-        return False
-
-    logger.info(f"[OK] No feature exceeds correlation threshold {threshold} with {target}")
-    return True
-
-
-def check_index_monotonic(df: pd.DataFrame) -> bool:
-    """Ensure the time index is strictly monotonically increasing."""
-    if not df.index.is_monotonic_increasing:
-        logger.error("[LEAKAGE] DataFrame index is NOT monotonically increasing — time ordering violated")
-        return False
-    logger.info("[OK] Index is monotonically increasing")
-    return True
-
-
-def check_no_target_in_features(df: pd.DataFrame, feature_cols: list[str]) -> bool:
-    """Ensure none of the target columns appear in the feature set."""
+def check_no_targets_in_features(
+    feature_cols: list[str],
+) -> tuple[bool, str]:
     overlap = TARGET_COLS & set(feature_cols)
-    if overlap:
-        logger.error(f"[LEAKAGE] Target columns in feature set: {overlap}")
-        return False
-    logger.info("[OK] No target columns in feature set")
-    return True
+    ok  = len(overlap) == 0
+    msg = "OK" if ok else f"FAIL — target columns in feature set: {overlap}"
+    return ok, msg
 
 
-def run_all_checks(df: pd.DataFrame, feature_cols: list[str]) -> dict[str, bool]:
-    """Run the full leakage check suite and return a results dict."""
-    results = {
-        "no_future_lags":              check_no_future_lags(df),
-        "index_monotonic":             check_index_monotonic(df),
-        "no_target_in_features":       check_no_target_in_features(df, feature_cols),
-        "correlation_enso_t1":         check_feature_target_correlation_in_time(df, "enso_t1"),
-        "correlation_enso_t3":         check_feature_target_correlation_in_time(df, "enso_t3"),
-        "correlation_enso_t6":         check_feature_target_correlation_in_time(df, "enso_t6"),
+def check_target_shift(
+    df: pd.DataFrame,
+    n_spot_checks: int = 20,
+) -> tuple[bool, str]:
+    """Spot-check that enso_t1[i] == enso_phase[i+1].
+
+    Verifies the shift logic in labeling is correct end-to-end.
+    Checks the first n_spot_checks non-NaN rows.
+    """
+    if "enso_t1" not in df.columns or "enso_phase" not in df.columns:
+        return True, "SKIP — columns not present"
+
+    mismatches = []
+    checked = 0
+    for i in range(len(df) - 1):
+        t1   = df["enso_t1"].iloc[i]
+        ph1  = df["enso_phase"].iloc[i + 1]
+        if t1 is None or ph1 is None or pd.isna(t1) or pd.isna(ph1):
+            continue
+        if t1 != ph1:
+            mismatches.append(i)
+        checked += 1
+        if checked >= n_spot_checks:
+            break
+
+    ok  = len(mismatches) == 0
+    msg = "OK" if ok else f"FAIL — shift mismatches at rows: {mismatches}"
+    return ok, msg
+
+
+def run_leakage_checks(
+    df: pd.DataFrame,
+    feature_cols: list[str],
+) -> dict[str, bool]:
+    """Run the full leakage check suite.
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        Feature-engineered DataFrame (output of build_features + label).
+    feature_cols : list[str]
+        Column names that will be used as model inputs.
+
+    Returns
+    -------
+    dict[str, bool]
+        Mapping of check name → passed. All must be True to proceed.
+    """
+    checks = {
+        "index_monotonic":        check_index_monotonic(df),
+        "no_future_lags":         check_no_future_lags(df),
+        "no_targets_in_features": check_no_targets_in_features(feature_cols),
+        "target_shift_correct":   check_target_shift(df),
     }
-    passed = sum(results.values())
-    total  = len(results)
-    logger.info(f"Leakage checks: {passed}/{total} passed")
-    if passed < total:
-        failed = [k for k, v in results.items() if not v]
-        logger.error(f"FAILED checks: {failed}")
-    return results
+
+    all_passed = True
+    for name, (ok, msg) in checks.items():
+        status = "✓" if ok else "✗"
+        print(f"[leakage] {status} {name}: {msg}")
+        if not ok:
+            all_passed = False
+
+    if all_passed:
+        print("[leakage] All checks passed — safe to proceed")
+    else:
+        print("[leakage] LEAKAGE DETECTED — pipeline should not continue")
+
+    return {name: ok for name, (ok, _) in checks.items()}

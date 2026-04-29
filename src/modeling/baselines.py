@@ -1,25 +1,23 @@
 """Climatology and persistence baselines.
 
 These are the minimum benchmarks any trained model must beat.
+A model that cannot outperform persistence at t+1 or climatology
+at t+6 has no practical value.
 
-Climatology baseline
---------------------
-Predicts the most frequent ENSO phase in the *training set* for every
-sample — equivalent to a zero-skill forecaster that knows the climate.
+Climatology
+-----------
+Predicts the most frequent ENSO phase in the training set for every
+sample — equivalent to always saying "probably Neutral".
 
-Persistence baseline
---------------------
-Predicts that the ENSO phase at time t will persist unchanged at t+L.
-This is a deceptively strong baseline for short lead times.
+Persistence
+-----------
+Predicts that the current ENSO phase at t will persist unchanged at t+L.
+Deceptively strong at short lead times because ENSO events last 6–18 months.
 """
 from __future__ import annotations
 
 import numpy as np
 import pandas as pd
-
-from src.utils.logging import get_logger
-
-logger = get_logger(__name__)
 
 
 class ClimatologyBaseline:
@@ -30,7 +28,7 @@ class ClimatologyBaseline:
 
     def fit(self, y_train: pd.Series) -> "ClimatologyBaseline":
         self.most_frequent_class_ = y_train.value_counts().idxmax()
-        logger.info(f"ClimatologyBaseline: most frequent class = {self.most_frequent_class_!r}")
+        print(f"[climatology] Most frequent class: '{self.most_frequent_class_}'")
         return self
 
     def predict(self, n: int) -> np.ndarray:
@@ -40,8 +38,15 @@ class ClimatologyBaseline:
 
 
 class PersistenceBaseline:
-    """Predict enso_phase_t for all horizons (no change assumption)."""
+    """Predict current phase as the forecast for any horizon."""
 
     def predict(self, enso_phase_t: pd.Series) -> np.ndarray:
-        """Return current phase as the forecast — horizon-agnostic."""
+        """Return current phase as forecast — no fitting needed.
+
+        Parameters
+        ----------
+        enso_phase_t : pd.Series
+            The enso_phase column for the rows being predicted
+            (i.e. the phase at time t, not t+L).
+        """
         return enso_phase_t.values

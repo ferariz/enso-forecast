@@ -1,84 +1,89 @@
-"""Model training pipeline.
+"""Model training wrapper.
 
-Wraps sklearn-compatible estimators with a consistent interface for
-training, prediction, and serialisation.  Handles class-label encoding
-internally so downstream code always works with human-readable strings.
+A single ModelTrainer class handles any sklearn-compatible estimator.
+Label encoding (string ↔ int) is managed internally — callers always
+work with human-readable phase strings.
 """
 from __future__ import annotations
 
-import hashlib
-import json
 from pathlib import Path
 from typing import Any
 
 import joblib
 import numpy as np
 import pandas as pd
-from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.linear_model import LogisticRegression
 from sklearn.preprocessing import LabelEncoder
 
-try:
-    import lightgbm as lgb
-    LGB_AVAILABLE = True
-except ImportError:
-    LGB_AVAILABLE = False
-
-from src.utils.logging import get_logger
-
-logger = get_logger(__name__)
-
-LABEL_ORDER = ["La Niña", "Neutral", "El Niño"]   # fixed encoding
+# Fixed label order — consistent across all models and evaluation
+LABEL_ORDER = ["La Niña", "Neutral", "El Niño"]
 
 
-def _build_estimator(model_name: str, params: dict[str, Any]):
-    """Instantiate a scikit-learn-compatible estimator from config."""
-    if model_name == "logistic_regression":
+def _build_estimator(name: str, params: dict[str, Any]):
+    """Instantiate an estimator from a name + params dict."""
+    if name == "logistic_regression":
         return LogisticRegression(**params)
-    elif model_name == "random_forest":
+    elif name == "random_forest":
         return RandomForestClassifier(**params)
-    elif model_name == "lightgbm":
-        if not LGB_AVAILABLE:
-            raise ImportError("lightgbm is not installed. Run: pip install lightgbm")
-        return lgb.LGBMClassifier(**params)
+    elif name == "lightgbm":
+        try:
+            import lightgbm as lgb
+            return lgb.LGBMClassifier(**params)
+        except ImportError:
+            raise ImportError("lightgbm not installed — run: pip install lightgbm")
     else:
-        raise ValueError(f"Unknown model: {model_name!r}")
+        raise ValueError(f"Unknown model name: '{name}'")
 
 
 class ModelTrainer:
-    """Train a single model for a single target horizon."""
+    """Train, predict, and persist a single classification model.
+
+    Parameters
+    ----------
+    model_name : str
+        One of: logistic_regression | random_forest | lightgbm
+    params : dict
+        Hyperparameters passed directly to the estimator constructor.
+    """
 
     def __init__(self, model_name: str, params: dict[str, Any]):
         self.model_name = model_name
-        self.params = params
-        self.estimator = _build_estimator(model_name, params)
+        self.params     = params
+        self.estimator  = _build_estimator(model_name, params)
+
+        # Fit LabelEncoder on the fixed order so encoding is deterministic
         self.label_encoder = LabelEncoder()
         self.label_encoder.fit(LABEL_ORDER)
-        self.feature_names_: list[str] = []
 
-    def fit(
-        self,
-        X_train: pd.DataFrame,
-        y_train: pd.Series,
-    ) -> "ModelTrainer":
+        self.feature_names_: list[str] = []
+        self.is_fitted_: bool = False
+
+    def fit(self, X_train: pd.DataFrame, y_train: pd.Series) -> "ModelTrainer":
         self.feature_names_ = list(X_train.columns)
         y_enc = self.label_encoder.transform(y_train)
-        logger.info(
-            f"Training {self.model_name} | "
-            f"n_samples={len(X_train)} | "
-            f"n_features={X_train.shape[1]}"
-        )
+
+        print(f"[trainer] Fitting {self.model_name} | "
+              f"n={len(X_train)} samples | "
+              f"p={X_train.shape[1]} features")
+
         self.estimator.fit(X_train.values, y_enc)
+        self.is_fitted_ = True
         return self
 
     def predict(self, X: pd.DataFrame) -> np.ndarray:
         """Return string class predictions."""
-        y_enc = self.estimator.predict(X[self.feature_names_].values)
+        self._check_fitted()
+        X_aligned = X[self.feature_names_]
+        y_enc = self.estimator.predict(X_aligned.values)
         return self.label_encoder.inverse_transform(y_enc)
 
     def predict_proba(self, X: pd.DataFrame) -> pd.DataFrame:
-        """Return class probabilities as a DataFrame."""
-        proba = self.estimator.predict_proba(X[self.feature_names_].values)
+        """Return class probabilities as a DataFrame with class-name columns."""
+        self._check_fitted()
+        X_aligned = X[self.feature_names_]
+        proba  = self.estimator.predict_proba(X_aligned.values)
+        # estimator.classes_ gives encoded ints — decode to strings
         classes = self.label_encoder.inverse_transform(self.estimator.classes_)
         return pd.DataFrame(proba, index=X.index, columns=classes)
 
@@ -86,34 +91,12 @@ class ModelTrainer:
         path = Path(path)
         path.parent.mkdir(parents=True, exist_ok=True)
         joblib.dump(self, path)
-        logger.info(f"Model saved → {path}")
+        print(f"[trainer] Saved → {path}")
 
     @classmethod
     def load(cls, path: str | Path) -> "ModelTrainer":
         return joblib.load(path)
 
-
-def train_all_models(
-    X_train: pd.DataFrame,
-    y_train: pd.Series,
-    target: str,
-    config: dict[str, Any],
-    output_dir: Path = Path("outputs/models"),
-) -> dict[str, ModelTrainer]:
-    """Train all enabled models for one target and persist to disk.
-
-    Returns a dict mapping model_name → fitted ModelTrainer.
-    """
-    trained: dict[str, ModelTrainer] = {}
-
-    for model_name, model_cfg in config.get("models", {}).items():
-        if not model_cfg.get("enabled", True):
-            continue
-        params = model_cfg.get("params", {})
-        trainer = ModelTrainer(model_name=model_name, params=params)
-        trainer.fit(X_train, y_train)
-        save_path = output_dir / target / f"{model_name}.joblib"
-        trainer.save(save_path)
-        trained[model_name] = trainer
-
-    return trained
+    def _check_fitted(self):
+        if not self.is_fitted_:
+            raise RuntimeError("Call fit() before predict()")

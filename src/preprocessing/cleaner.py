@@ -121,6 +121,26 @@ def clean(
         Clean DataFrame on a regular monthly MS grid.
     """
     df = filter_time_range(df, start=start, end=end)
+    df = coerce_numeric(df)          # ensure all columns are float before grid ops
     df = enforce_monthly_grid(df)
     df = impute_gaps(df, max_gap=max_gap)
+    return df
+
+
+def coerce_numeric(df: pd.DataFrame) -> pd.DataFrame:
+    """Force all columns to numeric dtype, converting unparseable values to NaN.
+
+    This catches cases where the raw file had missing-value sentinels
+    jammed against real values without whitespace separation, causing
+    read_csv to store the entire token as a string in an object column.
+
+    E.g. "2.34-999.9-999.9..." → NaN (correctly treated as missing).
+    """
+    df = df.copy()
+    object_cols = df.select_dtypes(include="object").columns.tolist()
+    if object_cols:
+        print(f"[cleaner] Coercing {len(object_cols)} object columns to numeric: "
+              f"{object_cols}")
+        for col in object_cols:
+            df[col] = pd.to_numeric(df[col], errors="coerce")
     return df

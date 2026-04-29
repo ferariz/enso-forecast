@@ -33,12 +33,27 @@ def fetch_raw(url: str = URL, save_path: Path | None = None) -> str:
     return text
 
 
+def _is_valid_year_line(line: str) -> bool:
+    """Return True only for lines whose first token is a plausible calendar year.
+
+    The real NOAA SOI file contains:
+    - Header rows starting with letters ("STANDARDIZED", "YEAR", etc.)
+    - Data rows starting with a 4-digit year (1950–2099)
+    - Sentinel rows where year=9999 (all-missing placeholder) — must exclude
+    - Rows with no whitespace where -999.9 values run together — start with "-"
+    """
+    token = line.strip().split()[0] if line.strip() else ""
+    if len(token) != 4 or not token.isdigit():
+        return False
+    year = int(token)
+    return 1900 <= year <= 2099   # exclude 9999 sentinel
+
+
 def parse(text: str) -> pd.DataFrame:
     """Parse wide-format SOI into a tidy monthly series."""
-    # Keep only lines whose first token is a 4-digit year
     data_lines = [
         line for line in text.splitlines()
-        if line.strip() and line.strip()[:4].isdigit()
+        if _is_valid_year_line(line)
     ]
 
     df = pd.read_csv(

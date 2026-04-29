@@ -38,12 +38,19 @@ def fetch_raw(url: str = URL, save_path: Path | None = None) -> str:
     return text
 
 
+def _is_valid_year_line(line: str) -> bool:
+    """Return True only for lines whose first token is a plausible calendar year."""
+    token = line.strip().split()[0] if line.strip() else ""
+    if len(token) != 4 or not token.isdigit():
+        return False
+    return 1900 <= int(token) <= 2099
+
+
 def parse(text: str) -> pd.DataFrame:
     """Parse raw ASCII text into a monthly-indexed DataFrame."""
-    # Keep only lines that start with a 4-digit year
     data_lines = [
         line for line in text.splitlines()
-        if line.strip() and line.strip()[:4].isdigit()
+        if _is_valid_year_line(line)
     ]
 
     df = pd.read_csv(

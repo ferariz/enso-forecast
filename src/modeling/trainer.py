@@ -14,7 +14,7 @@ import numpy as np
 import pandas as pd
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
-from sklearn.preprocessing import LabelEncoder
+from sklearn.preprocessing import LabelEncoder, StandardScaler
 
 # Fixed label order — consistent across all models and evaluation
 LABEL_ORDER = ["La Niña", "Neutral", "El Niño"]
@@ -58,6 +58,9 @@ class ModelTrainer:
 
         self.feature_names_: list[str] = []
         self.is_fitted_: bool = False
+        # Logistic regression needs scaled features to converge reliably
+        self._use_scaler = (model_name == "logistic_regression")
+        self._scaler = StandardScaler() if self._use_scaler else None
 
     def fit(self, X_train: pd.DataFrame, y_train: pd.Series) -> "ModelTrainer":
         self.feature_names_ = list(X_train.columns)
@@ -67,7 +70,10 @@ class ModelTrainer:
               f"n={len(X_train)} samples | "
               f"p={X_train.shape[1]} features")
 
-        self.estimator.fit(X_train.values, y_enc)
+        X_vals = X_train.values
+        if self._use_scaler:
+            X_vals = self._scaler.fit_transform(X_vals)
+        self.estimator.fit(X_vals, y_enc)
         self.is_fitted_ = True
         return self
 
@@ -75,14 +81,20 @@ class ModelTrainer:
         """Return string class predictions."""
         self._check_fitted()
         X_aligned = X[self.feature_names_]
-        y_enc = self.estimator.predict(X_aligned.values)
+        X_vals = X_aligned.values
+        if self._use_scaler:
+            X_vals = self._scaler.transform(X_vals)
+        y_enc = self.estimator.predict(X_vals)
         return self.label_encoder.inverse_transform(y_enc)
 
     def predict_proba(self, X: pd.DataFrame) -> pd.DataFrame:
         """Return class probabilities as a DataFrame with class-name columns."""
         self._check_fitted()
         X_aligned = X[self.feature_names_]
-        proba  = self.estimator.predict_proba(X_aligned.values)
+        X_vals = X_aligned.values
+        if self._use_scaler:
+            X_vals = self._scaler.transform(X_vals)
+        proba  = self.estimator.predict_proba(X_vals)
         # estimator.classes_ gives encoded ints — decode to strings
         classes = self.label_encoder.inverse_transform(self.estimator.classes_)
         return pd.DataFrame(proba, index=X.index, columns=classes)

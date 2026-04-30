@@ -1,0 +1,428 @@
+{
+  "enso_t1": {
+    "logistic_regression": {
+      "name": "enso_t1/logistic_regression",
+      "accuracy": 0.9333,
+      "f1_macro": 0.9285,
+      "f1_per_class": {
+        "La Ni\u00f1a": 0.9697,
+        "Neutral": 0.9211,
+        "El Ni\u00f1o": 0.8947
+      },
+      "confusion_matrix": [
+        [
+          32,
+          0,
+          0
+        ],
+        [
+          2,
+          35,
+          3
+        ],
+        [
+          0,
+          1,
+          17
+        ]
+      ],
+      "n_samples": 90
+    },
+    "random_forest": {
+      "name": "enso_t1/random_forest",
+      "accuracy": 0.9333,
+      "f1_macro": 0.9395,
+      "f1_per_class": {
+        "La Ni\u00f1a": 0.9206,
+        "Neutral": 0.925,
+        "El Ni\u00f1o": 0.973
+      },
+      "confusion_matrix": [
+        [
+          29,
+          3,
+          0
+        ],
+        [
+          2,
+          37,
+          1
+        ],
+        [
+          0,
+          0,
+          18
+        ]
+      ],
+      "n_samples": 90
+    },
+    "lightgbm": {
+      "name": "enso_t1/lightgbm",
+      "accuracy": 0.9444,
+      "f1_macro": 0.9454,
+      "f1_per_class": {
+        "La Ni\u00f1a": 0.9538,
+        "Neutral": 0.9351,
+        "El Ni\u00f1o": 0.9474
+      },
+      "confusion_matrix": [
+        [
+          31,
+          1,
+          0
+        ],
+        [
+          2,
+          36,
+          2
+        ],
+        [
+          0,
+          0,
+          18
+        ]
+      ],
+      "n_samples": 90
+    },
+    "climatology": {
+      "name": "enso_t1/climatology",
+      "accuracy": 0.4444,
+      "f1_macro": 0.2051,
+      "f1_per_class": {
+        "La Ni\u00f1a": 0.0,
+        "Neutral": 0.6154,
+        "El Ni\u00f1o": 0.0
+      },
+      "confusion_matrix": [
+        [
+          0,
+          32,
+          0
+        ],
+        [
+          0,
+          40,
+          0
+        ],
+        [
+          0,
+          18,
+          0
+        ]
+      ],
+      "n_samples": 90
+    },
+    "persistence": {
+      "name": "enso_t1/persistence",
+      "accuracy": 0.8556,
+      "f1_macro": 0.8584,
+      "f1_per_class": {
+        "La Ni\u00f1a": 0.875,
+        "Neutral": 0.8354,
+        "El Ni\u00f1o": 0.8649
+      },
+      "confusion_matrix": [
+        [
+          28,
+          4,
+          0
+        ],
+        [
+          4,
+          33,
+          3
+        ],
+        [
+          0,
+          2,
+          16
+        ]
+      ],
+      "n_samples": 90
+    }
+  },
+  "enso_t3": {
+    "logistic_regression": {
+      "name": "enso_t3/logistic_regression",
+      "accuracy": 0.7841,
+      "f1_macro": 0.7902,
+      "f1_per_class": {
+        "La Ni\u00f1a": 0.7869,
+        "Neutral": 0.7711,
+        "El Ni\u00f1o": 0.8125
+      },
+      "confusion_matrix": [
+        [
+          24,
+          8,
+          0
+        ],
+        [
+          5,
+          32,
+          3
+        ],
+        [
+          0,
+          3,
+          13
+        ]
+      ],
+      "n_samples": 88
+    },
+    "random_forest": {
+      "name": "enso_t3/random_forest",
+      "accuracy": 0.7273,
+      "f1_macro": 0.7273,
+      "f1_per_class": {
+        "La Ni\u00f1a": 0.7869,
+        "Neutral": 0.6923,
+        "El Ni\u00f1o": 0.7027
+      },
+      "confusion_matrix": [
+        [
+          24,
+          8,
+          0
+        ],
+        [
+          5,
+          27,
+          8
+        ],
+        [
+          0,
+          3,
+          13
+        ]
+      ],
+      "n_samples": 88
+    },
+    "lightgbm": {
+      "name": "enso_t3/lightgbm",
+      "accuracy": 0.7386,
+      "f1_macro": 0.7395,
+      "f1_per_class": {
+        "La Ni\u00f1a": 0.7778,
+        "Neutral": 0.7229,
+        "El Ni\u00f1o": 0.7179
+      },
+      "confusion_matrix": [
+        [
+          21,
+          11,
+          0
+        ],
+        [
+          1,
+          30,
+          9
+        ],
+        [
+          0,
+          2,
+          14
+        ]
+      ],
+      "n_samples": 88
+    },
+    "climatology": {
+      "name": "enso_t3/climatology",
+      "accuracy": 0.4545,
+      "f1_macro": 0.2083,
+      "f1_per_class": {
+        "La Ni\u00f1a": 0.0,
+        "Neutral": 0.625,
+        "El Ni\u00f1o": 0.0
+      },
+      "confusion_matrix": [
+        [
+          0,
+          32,
+          0
+        ],
+        [
+          0,
+          40,
+          0
+        ],
+        [
+          0,
+          16,
+          0
+        ]
+      ],
+      "n_samples": 88
+    },
+    "persistence": {
+      "name": "enso_t3/persistence",
+      "accuracy": 0.6023,
+      "f1_macro": 0.6101,
+      "f1_per_class": {
+        "La Ni\u00f1a": 0.6562,
+        "Neutral": 0.5455,
+        "El Ni\u00f1o": 0.6286
+      },
+      "confusion_matrix": [
+        [
+          21,
+          11,
+          0
+        ],
+        [
+          11,
+          21,
+          8
+        ],
+        [
+          0,
+          5,
+          11
+        ]
+      ],
+      "n_samples": 88
+    }
+  },
+  "enso_t6": {
+    "logistic_regression": {
+      "name": "enso_t6/logistic_regression",
+      "accuracy": 0.5529,
+      "f1_macro": 0.5496,
+      "f1_per_class": {
+        "La Ni\u00f1a": 0.5098,
+        "Neutral": 0.575,
+        "El Ni\u00f1o": 0.5641
+      },
+      "confusion_matrix": [
+        [
+          13,
+          15,
+          4
+        ],
+        [
+          6,
+          23,
+          11
+        ],
+        [
+          0,
+          2,
+          11
+        ]
+      ],
+      "n_samples": 85
+    },
+    "random_forest": {
+      "name": "enso_t6/random_forest",
+      "accuracy": 0.5529,
+      "f1_macro": 0.5565,
+      "f1_per_class": {
+        "La Ni\u00f1a": 0.5172,
+        "Neutral": 0.5641,
+        "El Ni\u00f1o": 0.5882
+      },
+      "confusion_matrix": [
+        [
+          15,
+          13,
+          4
+        ],
+        [
+          11,
+          22,
+          7
+        ],
+        [
+          0,
+          3,
+          10
+        ]
+      ],
+      "n_samples": 85
+    },
+    "lightgbm": {
+      "name": "enso_t6/lightgbm",
+      "accuracy": 0.4941,
+      "f1_macro": 0.4891,
+      "f1_per_class": {
+        "La Ni\u00f1a": 0.3922,
+        "Neutral": 0.5385,
+        "El Ni\u00f1o": 0.5366
+      },
+      "confusion_matrix": [
+        [
+          10,
+          15,
+          7
+        ],
+        [
+          9,
+          21,
+          10
+        ],
+        [
+          0,
+          2,
+          11
+        ]
+      ],
+      "n_samples": 85
+    },
+    "climatology": {
+      "name": "enso_t6/climatology",
+      "accuracy": 0.4706,
+      "f1_macro": 0.2133,
+      "f1_per_class": {
+        "La Ni\u00f1a": 0.0,
+        "Neutral": 0.64,
+        "El Ni\u00f1o": 0.0
+      },
+      "confusion_matrix": [
+        [
+          0,
+          32,
+          0
+        ],
+        [
+          0,
+          40,
+          0
+        ],
+        [
+          0,
+          13,
+          0
+        ]
+      ],
+      "n_samples": 85
+    },
+    "persistence": {
+      "name": "enso_t6/persistence",
+      "accuracy": 0.4235,
+      "f1_macro": 0.4188,
+      "f1_per_class": {
+        "La Ni\u00f1a": 0.5079,
+        "Neutral": 0.3733,
+        "El Ni\u00f1o": 0.375
+      },
+      "confusion_matrix": [
+        [
+          16,
+          16,
+          0
+        ],
+        [
+          13,
+          14,
+          13
+        ],
+        [
+          2,
+          5,
+          6
+        ]
+      ],
+      "n_samples": 85
+    }
+  }
+}

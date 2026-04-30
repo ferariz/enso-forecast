@@ -70,10 +70,12 @@ class ModelTrainer:
               f"n={len(X_train)} samples | "
               f"p={X_train.shape[1]} features")
 
-        X_vals = X_train.values
         if self._use_scaler:
-            X_vals = self._scaler.fit_transform(X_vals)
-        self.estimator.fit(X_vals, y_enc)
+            X_vals = self._scaler.fit_transform(X_train.values)
+            self.estimator.fit(X_vals, y_enc)
+        else:
+            # Pass DataFrame directly so tree models keep feature names
+            self.estimator.fit(X_train, y_enc)
         self.is_fitted_ = True
         return self
 
@@ -81,20 +83,20 @@ class ModelTrainer:
         """Return string class predictions."""
         self._check_fitted()
         X_aligned = X[self.feature_names_]
-        X_vals = X_aligned.values
         if self._use_scaler:
-            X_vals = self._scaler.transform(X_vals)
-        y_enc = self.estimator.predict(X_vals)
+            y_enc = self.estimator.predict(self._scaler.transform(X_aligned.values))
+        else:
+            y_enc = self.estimator.predict(X_aligned)
         return self.label_encoder.inverse_transform(y_enc)
 
     def predict_proba(self, X: pd.DataFrame) -> pd.DataFrame:
         """Return class probabilities as a DataFrame with class-name columns."""
         self._check_fitted()
         X_aligned = X[self.feature_names_]
-        X_vals = X_aligned.values
         if self._use_scaler:
-            X_vals = self._scaler.transform(X_vals)
-        proba  = self.estimator.predict_proba(X_vals)
+            proba = self.estimator.predict_proba(self._scaler.transform(X_aligned.values))
+        else:
+            proba = self.estimator.predict_proba(X_aligned)
         # estimator.classes_ gives encoded ints — decode to strings
         classes = self.label_encoder.inverse_transform(self.estimator.classes_)
         return pd.DataFrame(proba, index=X.index, columns=classes)

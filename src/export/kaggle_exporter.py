@@ -81,9 +81,10 @@ def _drop_unrenamed_raw_cols(df: pd.DataFrame) -> pd.DataFrame:
     These appear when the raw ingestion columns were not fully cleaned up.
     The anomaly columns (renamed to sst_anom_*) are the ones we keep.
     """
-    raw_raw = {"nino12", "nino3", "nino34", "nino4",
-               "nino12_anom", "nino3_anom", "nino34_anom", "nino4_anom",
-               "soi", "zwnd850_anom"}
+    # Only drop the raw SST absolute values (not anomalies).
+    # Anomaly columns (nino34_anom, soi, etc.) are renamed in the
+    # next step — dropping them here would remove the base features.
+    raw_raw = {"nino12", "nino3", "nino34", "nino4"}
     drop = [c for c in df.columns if c in raw_raw]
     if drop:
         df = df.drop(columns=drop)

@@ -95,11 +95,24 @@ def label(
         future_smoothed = smoothed.shift(-L)
         df[col] = _phase_from_value(future_smoothed)
 
-    # Report
+    # ── Reporting ─────────────────────────────────────────────────────────────
     dist = df["enso_phase"].value_counts().to_dict()
     print(f"[labeling] Phase distribution at t: {dist}")
+
     for L in horizons:
-        n_nan = df[f"enso_t{L}"].isna().sum()
-        print(f"[labeling] enso_t{L}: {n_nan} NaN rows at end (expected: {L})")
+        col = f"enso_t{L}"
+        n_nan = df[col].isna().sum()
+        # NaNs come from two sources:
+        #   1. The shift itself (last L rows have no future data) — always L rows
+        #   2. NaNs in the source series (e.g. recent months not yet published)
+        # We report both so the message is honest.
+        shift_nan   = L
+        source_nan  = max(0, n_nan - shift_nan)
+        msg = f"[labeling] {col}: {n_nan} NaN rows"
+        msg += f" ({shift_nan} from horizon shift"
+        if source_nan > 0:
+            msg += f", {source_nan} from missing source data"
+        msg += ")"
+        print(msg)
 
     return df

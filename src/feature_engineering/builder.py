@@ -17,6 +17,9 @@ import pandas as pd
 # These columns are passed through untouched
 TARGET_COLS = {"enso_phase", "enso_t1", "enso_t3", "enso_t6"}
 
+# MAM = boreal spring months
+SPRING_MONTHS = {3, 4, 5}
+
 
 def _add_lags(df: pd.DataFrame, col: str, lags: list[int]) -> pd.DataFrame:
     """Add lagged columns: {col}_lag{L} = value L months ago.
@@ -69,6 +72,68 @@ def _add_calendar_features(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
+def _forecast_crosses_spring(init_month: int, horizon: int) -> bool:
+    """Return True if the forecast window [t+1, t+horizon] contains any MAM month.
+
+    Parameters
+    ----------
+    init_month : int
+        Calendar month of initialization (1=Jan, 12=Dec).
+    horizon : int
+        Forecast lead time in months.
+
+    Physical rationale
+    ------------------
+    The boreal spring predictability barrier (SPB) causes a sharp drop in
+    ENSO forecast skill for windows that pass through MAM (March–May).
+    This is due to the phase-locking of ENSO to the annual cycle: SST
+    anomalies in the central-eastern Pacific tend to peak in boreal winter
+    (DJF) and decay through spring, making spring a "barrier" that
+    disrupts the persistence of anomalies into the following season.
+
+    For L=6, the months that cross spring are: Sep, Oct, Nov, Dec, Jan,
+    Feb, Mar, Apr (8 months). May–Aug do NOT cross spring and therefore
+    have both higher forecast skill and higher operational impact since
+    their targets land in DJF.
+    """
+    forecast_months = {(init_month + l - 1) % 12 + 1 for l in range(1, horizon + 1)}
+    return bool(forecast_months & SPRING_MONTHS)
+
+
+def _add_spring_barrier_features(
+    df: pd.DataFrame,
+    horizons: list[int],
+) -> pd.DataFrame:
+    """Add crosses_spring_tL boolean features for each forecast horizon.
+
+    These features encode whether a given forecast crosses the boreal
+    spring predictability barrier (MAM). They are computed from the
+    initialization month only — strictly backward-looking.
+
+    A tree model (LightGBM, RF) will use these as regime indicators,
+    applying different logic to spring-crossing vs non-spring-crossing
+    forecasts. In a linear model, an interaction term with the main
+    ENSO indices would be needed instead.
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        DataFrame with a monthly DatetimeIndex.
+    horizons : list[int]
+        Forecast horizons in months (e.g. [1, 3, 6]).
+    """
+    month = df.index.month
+    for L in horizons:
+        col = f"crosses_spring_t{L}"
+        df[col] = [
+            _forecast_crosses_spring(m, L) for m in month
+        ]
+        n_true  = df[col].sum()
+        n_false = (~df[col]).sum()
+        print(f"[features] {col}: {n_true} cross spring, {n_false} do not")
+    return df
+
+
 def build_features(
     df: pd.DataFrame,
     config: dict[str, Any],
@@ -110,6 +175,12 @@ def build_features(
             df = _add_diff(df, col, tf["diff"].get("periods", [1]))
 
     df = _add_calendar_features(df)
+
+    # Spring barrier features — one boolean per forecast horizon
+    # Horizons are read from the targets list in modeling.yaml, but we
+    # default to [1, 3, 6] to match DEFAULT_HORIZONS in labeling.
+    horizons = [1, 3, 6]
+    df = _add_spring_barrier_features(df, horizons)
 
     feature_cols = get_feature_columns(df)
     print(f"[features] Built {len(feature_cols)} feature columns "

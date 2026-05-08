@@ -9,19 +9,23 @@ Labels
     "La Niña"  : rolling_mean(nino34_anom, 3) <  -0.5
     "Neutral"  : otherwise
 
-Targets
--------
-    enso_phase  : phase at current time t (reference, not a prediction target)
-    enso_t1     : phase at t + 1 month
-    enso_t3     : phase at t + 3 months
-    enso_t6     : phase at t + 6 months
+Targets (per horizon L)
+-----------------------
+    enso_phase   : phase at current time t (reference, not a prediction target)
+    enso_tL      : ENSO phase at t+L (classification target)
+    nino34_tL    : smoothed Niño 3.4 anomaly (°C) at t+L (regression target)
+
+The regression target nino34_tL is the same 3-month smoothed series used
+to derive enso_tL — they are consistent by construction. This allows users
+to treat ENSO prediction as either a classification or regression problem,
+and to observe the "regression to the mean" bias that emerges during spring.
 
 SHIFT LOGIC (critical):
     future_smoothed = smoothed.shift(-L)
-    enso_tL = _phase_from_value(future_smoothed)
+    enso_tL  = _phase_from_value(future_smoothed)   # classification
+    nino34_tL = future_smoothed                      # regression (same series)
 
     shift(-L) pulls the value L steps ahead into the current row.
-    This means enso_t1 at row i equals enso_phase at row i+1.
     The last L rows will be NaN — expected and correct.
 """
 from __future__ import annotations
@@ -59,21 +63,24 @@ def label(
     source_col: str = "nino34_anom",
     horizons: list[int] = DEFAULT_HORIZONS,
 ) -> pd.DataFrame:
-    """Add ENSO phase columns to df.
+    """Add ENSO phase and Niño 3.4 anomaly target columns to df.
 
     Parameters
     ----------
     df : pd.DataFrame
         Cleaned DataFrame with a monthly DatetimeIndex.
     source_col : str
-        Column to threshold. Default "nino34_anom".
+        Column to smooth and threshold. Default "nino34_anom".
     horizons : list[int]
         Lead times in months to generate targets for.
 
     Returns
     -------
     pd.DataFrame
-        Original df plus enso_phase and enso_tL columns.
+        Original df plus:
+          - enso_phase         : phase at t (reference)
+          - enso_tL            : phase at t+L (classification target)
+          - nino34_tL          : smoothed Niño 3.4 anomaly at t+L (regression target)
     """
     if source_col not in df.columns:
         raise ValueError(
@@ -86,29 +93,31 @@ def label(
     # Smooth the anomaly series (backward-looking — no leakage)
     smoothed = _smooth(df[source_col])
 
-    # Current phase (reference label at time t)
-    df["enso_phase"] = _phase_from_value(smoothed)
+    # Reference: current smoothed anomaly and phase at t
+    df["nino34_smoothed"] = smoothed                    # kept for reference/debugging
+    df["enso_phase"]      = _phase_from_value(smoothed)
 
-    # Future targets — one per horizon
+    # Future targets — one classification + one regression per horizon
     for L in horizons:
-        col = f"enso_t{L}"
         future_smoothed = smoothed.shift(-L)
-        df[col] = _phase_from_value(future_smoothed)
+
+        # Classification target: phase string
+        df[f"enso_t{L}"]   = _phase_from_value(future_smoothed)
+
+        # Regression target: smoothed anomaly value (°C)
+        # Same series as used for classification — consistent by construction.
+        # Round to 2 decimal places to match NOAA publication precision.
+        df[f"nino34_t{L}"] = future_smoothed.round(2)
 
     # ── Reporting ─────────────────────────────────────────────────────────────
     dist = df["enso_phase"].value_counts().to_dict()
     print(f"[labeling] Phase distribution at t: {dist}")
 
     for L in horizons:
-        col = f"enso_t{L}"
-        n_nan = df[col].isna().sum()
-        # NaNs come from two sources:
-        #   1. The shift itself (last L rows have no future data) — always L rows
-        #   2. NaNs in the source series (e.g. recent months not yet published)
-        # We report both so the message is honest.
-        shift_nan   = L
-        source_nan  = max(0, n_nan - shift_nan)
-        msg = f"[labeling] {col}: {n_nan} NaN rows"
+        n_nan      = df[f"enso_t{L}"].isna().sum()
+        shift_nan  = L
+        source_nan = max(0, n_nan - shift_nan)
+        msg  = f"[labeling] enso_t{L} / nino34_t{L}: {n_nan} NaN rows"
         msg += f" ({shift_nan} from horizon shift"
         if source_nan > 0:
             msg += f", {source_nan} from missing source data"

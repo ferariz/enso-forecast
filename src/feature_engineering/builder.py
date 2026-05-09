@@ -15,7 +15,14 @@ import numpy as np
 import pandas as pd
 
 # These columns are passed through untouched
-TARGET_COLS = {"enso_phase", "enso_t1", "enso_t3", "enso_t6"}
+TARGET_COLS = {
+    # Classification targets
+    "enso_phase", "enso_t1", "enso_t3", "enso_t6",
+    # Regression targets — future values, must never be features
+    "nino34_t1", "nino34_t3", "nino34_t6",
+    # Reference smoothed series — derived from future data via targets
+    "nino34_smoothed",
+}
 
 # MAM = boreal spring months
 SPRING_MONTHS = {3, 4, 5}

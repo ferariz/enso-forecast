@@ -93,9 +93,11 @@ def label(
     # Smooth the anomaly series (backward-looking — no leakage)
     smoothed = _smooth(df[source_col])
 
-    # Reference: current smoothed anomaly and phase at t
-    df["nino34_smoothed"] = smoothed                    # kept for reference/debugging
-    df["enso_phase"]      = _phase_from_value(smoothed)
+    # Reference: current phase at t
+    # Note: nino34_smoothed is NOT added to the DataFrame — it would be
+    # trivially correlated with the regression targets and cause leakage.
+    # Users can recompute it as: nino34_anom.rolling(3).mean()
+    df["enso_phase"] = _phase_from_value(smoothed)
 
     # Future targets — one classification + one regression per horizon
     for L in horizons:

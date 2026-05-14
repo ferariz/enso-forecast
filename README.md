@@ -167,6 +167,21 @@ Automated leakage checks run on every dataset build:
 
 ---
 
+## Live analysis
+
+### 🌊 ENSO 2026: Is El Niño developing?
+As of April 2026, the tropical Pacific is showing early El Niño signals:
+ocean warming (+0.23°C) while the atmosphere remains in a La Niña-like
+pattern (SOI +2.0). The spring predictability barrier is active.
+
+See the analysis notebook:
+[enso_2026_forecast.ipynb](notebooks/research/enso_2026_forecast.ipynb)
+
+**Update planned for August 2026** — when post-barrier skill jumps from
+F1 ~0.43 to ~0.75 and the model predictions become meaningfully reliable.
+
+---
+
 ## Roadmap
 
 - [ ] MJO features (BOM RMM index)

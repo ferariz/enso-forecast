@@ -192,6 +192,26 @@ F1 ~0.43 to ~0.75 and the model predictions become meaningfully reliable.
 
 ---
 
+## Research
+
+This dataset and pipeline are being developed toward a scientific publication.
+If you use this dataset in your research, please cite the Kaggle dataset and
+the GitHub repository for now — a formal citation will be added once a paper
+is submitted.
+
+Areas of active investigation:
+- Walk-forward cross-validation for robust skill estimation
+- Statistical significance of LR vs LightGBM performance gap at t+6
+- Spring barrier quantification as a function of initialization month
+- Prospective validation on the 2026 ENSO season
+
+Potential venues: *Environmental Data Science*, *Int. Journal of Climatology*,
+*Geoscientific Model Development*, or a climate ML workshop.
+
+Collaborations and discussions welcome — open an issue on GitHub.
+
+---
+
 ## License
 
 MIT. Data from NOAA CPC is public domain.

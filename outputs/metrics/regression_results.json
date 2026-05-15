@@ -1,0 +1,26 @@
+{
+  "nino34_t1": {
+    "rmse": 0.0767,
+    "mae": 0.0638,
+    "rmse_persistence": 0.0753,
+    "mae_persistence": 0.0592,
+    "n_test": 91,
+    "horizon_months": 1
+  },
+  "nino34_t3": {
+    "rmse": 0.2702,
+    "mae": 0.2238,
+    "rmse_persistence": 0.3499,
+    "mae_persistence": 0.289,
+    "n_test": 89,
+    "horizon_months": 3
+  },
+  "nino34_t6": {
+    "rmse": 0.5759,
+    "mae": 0.468,
+    "rmse_persistence": 0.7353,
+    "mae_persistence": 0.5916,
+    "n_test": 86,
+    "horizon_months": 6
+  }
+}

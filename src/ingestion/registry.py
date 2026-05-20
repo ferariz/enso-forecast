@@ -48,6 +48,16 @@ def build_raw_dataset(
     zwnd_df = zonal_wind.load(raw_dir=raw_dir, url=config["zonal_wind_850"]["url"])
     frames.append(zwnd_df)
 
+    # ── WWV — warm water volume (subsurface heat content) ───────────────────────
+    if config.get("wwv", {}).get("enabled", True):
+        from src.ingestion import wwv_loader
+        wwv_df = wwv_loader.load(
+            cache_path=raw_dir / "wwv_raw.txt",
+            force=False,
+        )
+        # Keep only the standardised anomaly — volume is redundant
+        frames.append(wwv_df[["wwv_anom_std"]])
+
     # ── MJO (optional) ────────────────────────────────────────────────────────
     if config.get("mjo", {}).get("enabled", False):
         from src.ingestion import mjo

@@ -32,6 +32,14 @@ zonal_wind_850:
   filename: zwnd850_raw.txt
   note: "Monthly mean 850 hPa zonal wind anomaly, equatorial Pacific"
 
+wwv:
+  enabled: true
+  url: "https://www.pmel.noaa.gov/tao/wwv/data/wwv.dat"
+  description: >
+    NOAA PMEL Warm Water Volume — volume of water above the 20°C isotherm
+    integrated over the equatorial Pacific (5°S–5°N, 120°E–80°W).
+    Leading indicator of ENSO development (Meinen & McPhaden 2000).
+
 mjo:
   enabled: false   # toggle to include MJO features
   provider: bom_australia

@@ -8,7 +8,8 @@ base_variables:
   - nino3_anom       # central/eastern Pacific
   - nino4_anom       # western Pacific
   - soi              # atmospheric counterpart
-  - zwnd850_anom     # Walker circulation proxy
+  - zwnd850_anom
+  - wwv_anom_std     # Walker circulation proxy
 
 transformations:
   lags:

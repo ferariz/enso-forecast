@@ -43,9 +43,9 @@ Evaluated on held-out test set (2019–2026), which includes the strong 2020–2
 
 | Horizon | Best model | F1 macro | Persistence baseline |
 |---|---|---|---|
-| **t+1** | LightGBM | **0.945** | 0.858 |
-| **t+3** | Logistic Regression | **0.802** | 0.610 |
-| **t+6** | Logistic Regression | **0.608** | 0.419 |
+| **t+1** | LightGBM | **0.946** | 0.858 |
+| **t+3** | Logistic Regression | **0.765** | 0.614 |
+| **t+6** | Logistic Regression | **0.617** | 0.414 |
 
 LR outperforms LightGBM at t+3 and t+6 — simpler models generalise better at longer horizons on tabular climate data.
 
@@ -131,12 +131,13 @@ All sources are freely available — no API keys required.
 | Niño 1+2, 3, 4 anomalies | NOAA CPC | Eastern, central, western Pacific SST |
 | SOI | NOAA CPC | Normalised pressure difference Tahiti − Darwin |
 | 850 hPa zonal wind | NOAA CPC | Walker circulation strength |
+| WWV | NOAA PMEL | Warm water volume above 20°C isotherm — subsurface heat content |
 
 ---
 
 ## Features
 
-54 features, all **strictly backward-looking** (no future leakage):
+61 features, all **strictly backward-looking** (no future leakage):
 
 | Type | Example | Captures |
 |---|---|---|
@@ -184,6 +185,8 @@ F1 ~0.43 to ~0.75 and the model predictions become meaningfully reliable.
 
 ## Roadmap
 
+- [x] WWV subsurface heat content (NOAA PMEL)
+- [ ] WWV_E / WWV_W east-west split
 - [ ] MJO features (BOM RMM index)
 - [ ] Thermocline depth (D20 index)
 - [ ] Walk-forward cross-validation

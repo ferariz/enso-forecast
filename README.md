@@ -43,8 +43,8 @@ Evaluated on held-out test set (2019–2026), which includes the strong 2020–2
 
 | Horizon | Best model | F1 macro | Persistence baseline |
 |---|---|---|---|
-| **t+1** | LightGBM | **0.946** | 0.858 |
-| **t+3** | Logistic Regression | **0.765** | 0.614 |
+| **t+1** | LightGBM | **0.955** | 0.858 |
+| **t+3** | LightGBM | **0.798** | 0.614 |
 | **t+6** | Logistic Regression | **0.617** | 0.414 |
 
 LR outperforms LightGBM at t+3 and t+6 — simpler models generalise better at longer horizons on tabular climate data.

@@ -47,9 +47,35 @@ Evaluated on held-out test set (2019–2026), which includes the strong 2020–2
 | **t+3** | LightGBM | **0.798** | 0.614 |
 | **t+6** | Logistic Regression | **0.617** | 0.414 |
 
-LR outperforms LightGBM at t+3 and t+6 — simpler models generalise better at longer horizons on tabular climate data.
+LR outperforms LightGBM at t+6. With WWV added, LightGBM now wins at t+3 as well.
+The high single-split scores partly reflect the 2019–2026 test period, which included
+the unusually persistent 2020–2023 triple-dip La Niña.
 
-**Regression target (nino34_t3):** RMSE = 0.25°C — competitive with operational dynamical forecasts at this range.
+**Regression (nino34_t6):** RMSE = 0.525°C, skill = +0.286 vs persistence.
+Adding WWV subsurface heat content improved t+6 regression skill by ~32%.
+
+---
+
+## Walk-forward cross-validation
+
+The single-split benchmark uses a fixed test set (2019–2026). Walk-forward CV
+across 29 folds (1990–2018) gives a more conservative, cross-regime estimate:
+
+| Target | Best model | CV mean F1 | CV std | Significant vs persistence? |
+|---|---|---|---|---|
+| t+1 | LightGBM | 0.684 | 0.231 | ✓ p<0.001 |
+| t+3 | LightGBM | 0.465 | 0.158 | ✓ p=0.002 |
+| t+6 | LightGBM | 0.271 | 0.086 | ✓ p=0.044 |
+
+The high standard deviation reflects the ENSO cycle — some periods are
+inherently more predictable than others. At t+6, only LightGBM is
+statistically significant (p=0.044); LR and RF are not robust across
+all regimes, though they perform well on the 2019–2026 test set.
+
+Run CV locally:
+```bash
+python scripts/run_walk_forward_cv.py
+```
 
 ---
 
@@ -73,6 +99,7 @@ scripts/
   build_dataset.py          # full pipeline: ingest → preprocess → label → features → validate
   train_models.py           # train all models, evaluate vs baselines
   export_kaggle_dataset.py  # produce Kaggle-ready dataset bundle
+  run_walk_forward_cv.py    # 29-fold CV with significance testing
 
 src/
   ingestion/                # NOAA CPC loaders: Niño indices, SOI, zonal wind
@@ -97,6 +124,8 @@ data/
 outputs/
   models/                   # trained .joblib files (gitignored)
   metrics/results.json      # benchmark results (tracked)
+  metrics/cv_results.json   # walk-forward CV fold results
+  metrics/cv_summary.json   # CV mean/std/p-values
 ```
 
 ---
@@ -160,6 +189,10 @@ Train            Validation       Test (held out)
 1980 → 2015      2016 → 2018      2019 → present
 ```
 
+For cross-validation, walk-forward CV uses 29 non-overlapping folds
+across 1990–2018 with expanding training windows (min 120 months).
+See `src/validation/splits.py` and `scripts/run_walk_forward_cv.py`.
+
 Automated leakage checks run on every dataset build:
 - Index is monotonically increasing
 - No feature encodes a negative lag (future data)
@@ -171,9 +204,10 @@ Automated leakage checks run on every dataset build:
 ## Live analysis
 
 ### 🌊 ENSO 2026: Is El Niño developing?
-As of April 2026, the tropical Pacific is showing early El Niño signals:
-ocean warming (+0.23°C) while the atmosphere remains in a La Niña-like
-pattern (SOI +2.0). The spring predictability barrier is active.
+**Update May 2026:** El Niño is now near-certain. The SOI dropped from
++2.0 to **−11.2** — the atmosphere coupled with the ocean warming.
+IRI assigns 98% probability to El Niño for May–July 2026.
+Model predictions (April init, WWV-aware): **+1.46–1.72°C** by October.
 
 See the analysis notebook:
 [enso_2026_forecast.ipynb](notebooks/research/enso_2026_forecast.ipynb)
@@ -189,7 +223,7 @@ F1 ~0.43 to ~0.75 and the model predictions become meaningfully reliable.
 - [ ] WWV_E / WWV_W east-west split
 - [ ] MJO features (BOM RMM index)
 - [ ] Thermocline depth (D20 index)
-- [ ] Walk-forward cross-validation
+- [x] Walk-forward cross-validation (29 folds, paired t-test vs persistence)
 - [ ] t+9 month horizon
 - [ ] 2026 El Niño onset analysis
 
@@ -203,8 +237,9 @@ the GitHub repository for now — a formal citation will be added once a paper
 is submitted.
 
 Areas of active investigation:
-- Walk-forward cross-validation for robust skill estimation
+- Walk-forward CV implemented — 29 folds, t+3 significant p<0.005, t+6 marginal p=0.044
 - Statistical significance of LR vs LightGBM performance gap at t+6
+- CV reveals test set optimism: single-split F1 partly reflects 2019-2026 predictability
 - Spring barrier quantification as a function of initialization month
 - Prospective validation on the 2026 ENSO season
 

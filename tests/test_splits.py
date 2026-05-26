@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 import pytest
 
-from src.validation.splits import time_split, walk_forward_splits
+from src.validation.splits import time_split, walk_forward_cv, WalkForwardFold
 
 
 def _make_monthly_df(start="1990-01", periods=360) -> pd.DataFrame:
@@ -15,12 +15,12 @@ class TestTimeSplit:
     def test_train_ends_at_correct_date(self):
         df = _make_monthly_df()
         split = time_split(df, train_end="2010-12", test_start="2012-01")
-        assert split.train.index[-1] <= pd.Timestamp("2010-12")
+        assert split.train.index[-1] <= pd.Timestamp("2010-12-31")
 
     def test_test_starts_at_correct_date(self):
         df = _make_monthly_df()
         split = time_split(df, train_end="2010-12", test_start="2012-01")
-        assert split.test.index[0] >= pd.Timestamp("2012-01")
+        assert split.test.index[0] >= pd.Timestamp("2012-01-01")
 
     def test_no_overlap_train_test(self):
         df = _make_monthly_df()
@@ -38,30 +38,83 @@ class TestTimeSplit:
             val_end="2014-12",
         )
         assert split.val is not None
-        assert split.val.index[0]  >= pd.Timestamp("2011-01")
-        assert split.val.index[-1] <= pd.Timestamp("2014-12")
+        assert split.val.index[0]  >= pd.Timestamp("2011-01-01")
+        assert split.val.index[-1] <= pd.Timestamp("2014-12-31")
 
     def test_future_does_not_enter_train(self):
         df = _make_monthly_df()
         split = time_split(df, train_end="2010-12", test_start="2012-01")
-        # The x values in train should all be less than those in test
         assert split.train["x"].max() < split.test["x"].min()
 
 
-class TestWalkForward:
+class TestWalkForwardCV:
     def test_yields_multiple_folds(self):
         df = _make_monthly_df(periods=360)  # 30 years
-        folds = list(walk_forward_splits(df, initial_train_years=15, step_months=12, horizon_months=12))
-        assert len(folds) >= 2
+        folds = walk_forward_cv(df, cv_end="2019-12",
+                                min_train_months=120, test_window=12)
+        assert len(folds) >= 5
+
+    def test_returns_walk_forward_fold_objects(self):
+        df = _make_monthly_df(periods=360)
+        folds = walk_forward_cv(df, cv_end="2019-12",
+                                min_train_months=120, test_window=12)
+        assert all(isinstance(f, WalkForwardFold) for f in folds)
 
     def test_train_expands_monotonically(self):
         df = _make_monthly_df(periods=360)
-        folds = list(walk_forward_splits(df, initial_train_years=15, step_months=12, horizon_months=12))
+        folds = walk_forward_cv(df, cv_end="2019-12",
+                                min_train_months=120, test_window=12)
         train_lengths = [len(f.train) for f in folds]
         assert train_lengths == sorted(train_lengths)
 
-    def test_val_does_not_overlap_train(self):
+    def test_test_sets_non_overlapping(self):
         df = _make_monthly_df(periods=360)
-        for fold in walk_forward_splits(df, initial_train_years=15, step_months=12, horizon_months=12):
-            overlap = set(fold.train.index) & set(fold.val.index)
-            assert len(overlap) == 0
+        folds = walk_forward_cv(df, cv_end="2019-12",
+                                min_train_months=120, test_window=12)
+        test_dates: set = set()
+        for fold in folds:
+            fold_dates = set(fold.test.index)
+            assert not test_dates & fold_dates, \
+                f"Overlapping test dates in fold {fold.fold_index}"
+            test_dates |= fold_dates
+
+    def test_train_always_before_test(self):
+        df = _make_monthly_df(periods=360)
+        folds = walk_forward_cv(df, cv_end="2019-12",
+                                min_train_months=120, test_window=12)
+        for fold in folds:
+            assert fold.train_end < fold.test_start
+
+    def test_gap_months_respected(self):
+        df = _make_monthly_df(periods=360)
+        folds = walk_forward_cv(df, cv_end="2019-12",
+                                min_train_months=120, test_window=12,
+                                gap_months=6)
+        for fold in folds:
+            gap = (fold.test_start - fold.train_end).days / 30
+            assert gap >= 5.5, f"Gap too small: {gap:.1f} months"
+
+    def test_rolling_window_fixed_size(self):
+        df = _make_monthly_df(periods=360)
+        folds = walk_forward_cv(df, cv_end="2019-12",
+                                min_train_months=120, test_window=12,
+                                expanding=False)
+        for fold in folds:
+            assert len(fold.train) == 120, \
+                f"Rolling window wrong size: {len(fold.train)}"
+
+    def test_step_months_produces_more_folds(self):
+        df = _make_monthly_df(periods=360)
+        folds_12 = walk_forward_cv(df, cv_end="2019-12",
+                                   min_train_months=120, test_window=12,
+                                   step_months=12)
+        folds_6  = walk_forward_cv(df, cv_end="2019-12",
+                                   min_train_months=120, test_window=12,
+                                   step_months=6)
+        assert len(folds_6) > len(folds_12)
+
+    def test_insufficient_data_raises(self):
+        df = _make_monthly_df(periods=50)  # too short
+        with pytest.raises((ValueError, IndexError)):
+            walk_forward_cv(df, cv_end="1994-01",
+                            min_train_months=120, test_window=12)

@@ -1,0 +1,140 @@
+{
+  "enso_t1": {
+    "target": "enso_t1",
+    "n_folds": 29,
+    "models": {
+      "logistic_regression": {
+        "mean_f1": 0.6297,
+        "std_f1": 0.2239,
+        "min_f1": 0.2456,
+        "max_f1": 1.0,
+        "n_folds": 29,
+        "t_stat_vs_persistence": 1.3467,
+        "p_val_vs_persistence": 0.1889,
+        "significant_p05": false,
+        "significant_p01": false
+      },
+      "random_forest": {
+        "mean_f1": 0.6564,
+        "std_f1": 0.2047,
+        "min_f1": 0.3333,
+        "max_f1": 1.0,
+        "n_folds": 29,
+        "t_stat_vs_persistence": 3.2686,
+        "p_val_vs_persistence": 0.0029,
+        "significant_p05": true,
+        "significant_p01": true
+      },
+      "lightgbm": {
+        "mean_f1": 0.6843,
+        "std_f1": 0.2307,
+        "min_f1": 0.303,
+        "max_f1": 1.0,
+        "n_folds": 29,
+        "t_stat_vs_persistence": 5.0068,
+        "p_val_vs_persistence": 0.0,
+        "significant_p05": true,
+        "significant_p01": true
+      },
+      "persistence": {
+        "mean_f1": 0.6031,
+        "std_f1": 0.1683,
+        "min_f1": 0.303,
+        "max_f1": 0.8381,
+        "n_folds": 29
+      }
+    }
+  },
+  "enso_t3": {
+    "target": "enso_t3",
+    "n_folds": 29,
+    "models": {
+      "logistic_regression": {
+        "mean_f1": 0.461,
+        "std_f1": 0.1695,
+        "min_f1": 0.1667,
+        "max_f1": 0.7802,
+        "n_folds": 29,
+        "t_stat_vs_persistence": 3.0601,
+        "p_val_vs_persistence": 0.0048,
+        "significant_p05": true,
+        "significant_p01": true
+      },
+      "random_forest": {
+        "mean_f1": 0.4575,
+        "std_f1": 0.1425,
+        "min_f1": 0.2222,
+        "max_f1": 0.8296,
+        "n_folds": 29,
+        "t_stat_vs_persistence": 3.8717,
+        "p_val_vs_persistence": 0.0006,
+        "significant_p05": true,
+        "significant_p01": true
+      },
+      "lightgbm": {
+        "mean_f1": 0.4648,
+        "std_f1": 0.1575,
+        "min_f1": 0.2222,
+        "max_f1": 0.8413,
+        "n_folds": 29,
+        "t_stat_vs_persistence": 3.5184,
+        "p_val_vs_persistence": 0.0015,
+        "significant_p05": true,
+        "significant_p01": true
+      },
+      "persistence": {
+        "mean_f1": 0.3797,
+        "std_f1": 0.0769,
+        "min_f1": 0.2667,
+        "max_f1": 0.5143,
+        "n_folds": 29
+      }
+    }
+  },
+  "enso_t6": {
+    "target": "enso_t6",
+    "n_folds": 29,
+    "models": {
+      "logistic_regression": {
+        "mean_f1": 0.2642,
+        "std_f1": 0.1196,
+        "min_f1": 0.0,
+        "max_f1": 0.5278,
+        "n_folds": 29,
+        "t_stat_vs_persistence": 1.557,
+        "p_val_vs_persistence": 0.1307,
+        "significant_p05": false,
+        "significant_p01": false
+      },
+      "random_forest": {
+        "mean_f1": 0.2686,
+        "std_f1": 0.1289,
+        "min_f1": 0.0,
+        "max_f1": 0.5611,
+        "n_folds": 29,
+        "t_stat_vs_persistence": 1.7947,
+        "p_val_vs_persistence": 0.0835,
+        "significant_p05": false,
+        "significant_p01": false
+      },
+      "lightgbm": {
+        "mean_f1": 0.2713,
+        "std_f1": 0.0862,
+        "min_f1": 0.0556,
+        "max_f1": 0.4889,
+        "n_folds": 29,
+        "t_stat_vs_persistence": 2.1121,
+        "p_val_vs_persistence": 0.0437,
+        "significant_p05": true,
+        "significant_p01": false
+      },
+      "persistence": {
+        "mean_f1": 0.2136,
+        "std_f1": 0.0821,
+        "min_f1": 0.0556,
+        "max_f1": 0.3333,
+        "n_folds": 29
+      }
+    }
+  }
+}

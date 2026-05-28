@@ -43,11 +43,11 @@ Evaluated on held-out test set (2019–2026), which includes the strong 2020–2
 
 | Horizon | Best model | F1 macro | Persistence baseline |
 |---|---|---|---|
-| **t+1** | LightGBM | **0.955** | 0.858 |
-| **t+3** | LightGBM | **0.798** | 0.614 |
+| **t+1** | CatBoost | **0.968** | 0.858 |
+| **t+3** | CatBoost | **0.782** | 0.614 |
 | **t+6** | Logistic Regression | **0.617** | 0.414 |
 
-LR outperforms LightGBM at t+6. With WWV added, LightGBM now wins at t+3 as well.
+CatBoost leads at t+1 and t+3. LR still outperforms all tree models at t+6 — linear extrapolation remains an advantage at the longest horizon.
 The high single-split scores partly reflect the 2019–2026 test period, which included
 the unusually persistent 2020–2023 triple-dip La Niña.
 

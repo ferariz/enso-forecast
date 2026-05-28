@@ -76,6 +76,7 @@ class ModelTrainer:
               f"n={len(X_train)} samples | "
               f"p={X_train.shape[1]} features")
 
+        y_enc = y_enc.ravel() if hasattr(y_enc, 'ravel') else y_enc
         if self._use_scaler:
             X_vals = self._scaler.fit_transform(X_train.values)
             self.estimator.fit(X_vals, y_enc)

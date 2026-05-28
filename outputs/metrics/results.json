@@ -56,6 +56,34 @@
       ],
       "n_samples": 91
     },
+    "catboost": {
+      "name": "enso_t1/catboost",
+      "accuracy": 0.967,
+      "f1_macro": 0.9682,
+      "f1_per_class": {
+        "La Ni\u00f1a": 0.9688,
+        "Neutral": 0.963,
+        "El Ni\u00f1o": 0.973
+      },
+      "confusion_matrix": [
+        [
+          31,
+          1,
+          0
+        ],
+        [
+          1,
+          39,
+          1
+        ],
+        [
+          0,
+          0,
+          18
+        ]
+      ],
+      "n_samples": 91
+    },
     "lightgbm": {
       "name": "enso_t1/lightgbm",
       "accuracy": 0.9451,
@@ -198,6 +226,34 @@
       ],
       "n_samples": 89
     },
+    "catboost": {
+      "name": "enso_t3/catboost",
+      "accuracy": 0.7865,
+      "f1_macro": 0.7822,
+      "f1_per_class": {
+        "La Ni\u00f1a": 0.8254,
+        "Neutral": 0.7711,
+        "El Ni\u00f1o": 0.75
+      },
+      "confusion_matrix": [
+        [
+          26,
+          6,
+          0
+        ],
+        [
+          5,
+          32,
+          4
+        ],
+        [
+          0,
+          4,
+          12
+        ]
+      ],
+      "n_samples": 89
+    },
     "lightgbm": {
       "name": "enso_t3/lightgbm",
       "accuracy": 0.6966,
@@ -331,6 +387,34 @@
           14,
           22,
           5
+        ],
+        [
+          0,
+          3,
+          10
+        ]
+      ],
+      "n_samples": 86
+    },
+    "catboost": {
+      "name": "enso_t6/catboost",
+      "accuracy": 0.5233,
+      "f1_macro": 0.5398,
+      "f1_per_class": {
+        "La Ni\u00f1a": 0.4074,
+        "Neutral": 0.5455,
+        "El Ni\u00f1o": 0.6667
+      },
+      "confusion_matrix": [
+        [
+          11,
+          20,
+          1
+        ],
+        [
+          11,
+          24,
+          6
         ],
         [
           0,

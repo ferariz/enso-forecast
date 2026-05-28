@@ -32,6 +32,12 @@ def _build_estimator(name: str, params: dict[str, Any]):
             return lgb.LGBMClassifier(**params)
         except ImportError:
             raise ImportError("lightgbm not installed — run: pip install lightgbm")
+    elif name == "catboost":
+        try:
+            from catboost import CatBoostClassifier
+            return CatBoostClassifier(**params)
+        except ImportError:
+            raise ImportError("catboost not installed — run: pip install catboost")
     else:
         raise ValueError(f"Unknown model name: '{name}'")
 

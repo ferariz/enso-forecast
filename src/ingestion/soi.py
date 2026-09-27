@@ -64,9 +64,12 @@ def parse(text: str) -> pd.DataFrame:
         if _is_valid_year_line(line):
             data_lines.append(line)
             seen_data = True
-        elif seen_data and line.strip() and not line.strip()[0].isdigit():
-            # We've seen data rows and hit a non-data line — second table header
-            break
+        elif seen_data and line.strip():
+            first_char = line.strip()[0]
+            if not first_char.isdigit():
+                # Non-numeric start after data = second table header → stop
+                break
+            # Otherwise it's a no-space sentinel row (e.g. "2027-999.9...") → skip
 
     df = pd.read_csv(
         io.StringIO("\n".join(data_lines)),

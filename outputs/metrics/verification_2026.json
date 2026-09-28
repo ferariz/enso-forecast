@@ -1,0 +1,50 @@
+{
+  "source": "IRI Columbia, NOAA CPC, mappr.co, ensotracker.com",
+  "retrieval_date": "2026-09-28",
+  "note": "Paper model predicted nino34_anom = +2.06\u00b0C. Reviewer M1 flags that comparing against weekly OISST peak (+3.0\u00b0C) is like-for-unlike. The proper target is the 3-month backward ERSSTv5 mean (ONI convention).",
+  "observed_2026": {
+    "oni_jja_2026": {
+      "value": 1.8,
+      "unit": "\u00b0C anomaly",
+      "source": "NOAA CPC ERSSTv5, via mappr.co",
+      "description": "Official 3-month ONI for Jun-Aug 2026"
+    },
+    "monthly_aug_2026": {
+      "value": 2.52,
+      "unit": "\u00b0C anomaly",
+      "source": "IRI Columbia Sep 2026 Quick Look",
+      "description": "Monthly Ni\u00f1o 3.4 anomaly, August 2026"
+    },
+    "weekly_mid_sep_2026": {
+      "value": 3.0,
+      "unit": "\u00b0C anomaly",
+      "source": "IRI Columbia, OISST weekly",
+      "description": "Weekly Ni\u00f1o 3.4 mid-September 2026 (OISST, NOT ERSSTv5)"
+    },
+    "seasonal_jja_2026": {
+      "value": 2.03,
+      "unit": "\u00b0C anomaly",
+      "source": "IRI Columbia",
+      "description": "Jun-Aug 2026 seasonal mean"
+    }
+  },
+  "model_prediction": {
+    "nino34_regression": 2.06,
+    "description": "LightGBM regression prediction for Ni\u00f1o 3.4 anomaly"
+  },
+  "verification_analysis": {
+    "vs_oni_jja": {
+      "predicted": 2.06,
+      "observed": 1.8,
+      "error": 0.26,
+      "description": "Model overpredicts by 0.26\u00b0C vs official 3-month ONI"
+    },
+    "vs_weekly_oisst": {
+      "predicted": 2.06,
+      "observed": 3.0,
+      "error": -0.94,
+      "description": "Model underpredicts by 0.94\u00b0C vs weekly OISST peak \u2014 but this is a WRONG comparison (different data product and timescale)"
+    },
+    "conclusion": "The model prediction of +2.06\u00b0C is reasonably close to the official ONI JJA 2026 value of +1.80\u00b0C (error: +0.26\u00b0C). The paper's original claim of 'predicting a record' was based on comparing against the weekly OISST peak of +3.0\u00b0C, which is a different data product and timescale. The paper must use the 3-month ERSSTv5 mean (ONI convention) for proper like-for-like verification. The model correctly identifies a very strong El Ni\u00f1o but does NOT predict a record exceeding the 2015-16 event (ONI peak ~2.6\u00b0C in NDJ 2015-16)."
+  }
+}

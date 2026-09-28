@@ -1,0 +1,104 @@
+{
+  "enso_t1": {
+    "models": {
+      "logistic_regression": {
+        "dm_stat": 1.2224,
+        "p_value": 0.231752,
+        "mean_diff": 0.0266,
+        "hac_se": 0.0218,
+        "n_folds": 29,
+        "max_lag": 3,
+        "significant_p05": false,
+        "significant_p01": false
+      },
+      "random_forest": {
+        "dm_stat": 3.3223,
+        "p_value": 0.002494,
+        "mean_diff": 0.0533,
+        "hac_se": 0.016,
+        "n_folds": 29,
+        "max_lag": 3,
+        "significant_p05": true,
+        "significant_p01": true
+      },
+      "lightgbm": {
+        "dm_stat": 4.1682,
+        "p_value": 0.000267,
+        "mean_diff": 0.0812,
+        "hac_se": 0.0195,
+        "n_folds": 29,
+        "max_lag": 3,
+        "significant_p05": true,
+        "significant_p01": true
+      }
+    }
+  },
+  "enso_t3": {
+    "models": {
+      "logistic_regression": {
+        "dm_stat": 3.2442,
+        "p_value": 0.003044,
+        "mean_diff": 0.0813,
+        "hac_se": 0.0251,
+        "n_folds": 29,
+        "max_lag": 3,
+        "significant_p05": true,
+        "significant_p01": true
+      },
+      "random_forest": {
+        "dm_stat": 3.819,
+        "p_value": 0.000681,
+        "mean_diff": 0.0777,
+        "hac_se": 0.0204,
+        "n_folds": 29,
+        "max_lag": 3,
+        "significant_p05": true,
+        "significant_p01": true
+      },
+      "lightgbm": {
+        "dm_stat": 3.1183,
+        "p_value": 0.004184,
+        "mean_diff": 0.0851,
+        "hac_se": 0.0273,
+        "n_folds": 29,
+        "max_lag": 3,
+        "significant_p05": true,
+        "significant_p01": true
+      }
+    }
+  },
+  "enso_t6": {
+    "models": {
+      "logistic_regression": {
+        "dm_stat": 1.4068,
+        "p_value": 0.170484,
+        "mean_diff": 0.0506,
+        "hac_se": 0.036,
+        "n_folds": 29,
+        "max_lag": 3,
+        "significant_p05": false,
+        "significant_p01": false
+      },
+      "random_forest": {
+        "dm_stat": 1.5079,
+        "p_value": 0.142769,
+        "mean_diff": 0.055,
+        "hac_se": 0.0365,
+        "n_folds": 29,
+        "max_lag": 3,
+        "significant_p05": false,
+        "significant_p01": false
+      },
+      "lightgbm": {
+        "dm_stat": 1.9934,
+        "p_value": 0.056048,
+        "mean_diff": 0.0577,
+        "hac_se": 0.0289,
+        "n_folds": 29,
+        "max_lag": 3,
+        "significant_p05": false,
+        "significant_p01": false
+      }
+    }
+  }
+}

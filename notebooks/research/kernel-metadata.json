@@ -1,0 +1,13 @@
+{
+  "id": "ferariz/enso-2026-what-the-spring-barrier-tells-us",
+  "title": "ENSO 2026: What the Spring Barrier Tells Us",
+  "code_file": "enso_2026_forecast.ipynb",
+  "language": "python",
+  "kernel_type": "notebook",
+  "is_private": false,
+  "enable_gpu": false,
+  "enable_internet": false,
+  "dataset_sources": ["ferariz/enso-early-phase-prediction"],
+  "competition_sources": [],
+  "kernel_sources": []
+}
